@@ -16,7 +16,10 @@ char msg[] = "hello";
 unsigned int localPort = 80;      // local port to listen on
 
 char packetBuffer[256]; //buffer to hold incoming packet
-
+int parameters[2] = {{0},// { power value } add more parameters like voltage and current
+                     {0}}   
+char buff[255];             // buffer for incoming values
+                        
 int holdtime = 10000;     
 unsigned long mytime = millis(); 
    
@@ -75,18 +78,37 @@ void loop() {
   
   if (Myclients) {
     Serial.println("new client");
-    // an HTTP request ends with a blank line
+   
+    int variableNum = 0;
+    int nodeIndex = 0;
+    int buffIndex = 0;
+    bool NodeFound = false;
     while (Myclients.connected()) {
       if (Myclients.available()) {
-        char c = Myclients.read();
+
+        //making a parse function to read and return values to char arrays/ints
+        char c = Myclients.read();      //read character
         Serial.write(c);
-        // if you've gotten to the end of the line (received a newline
-        // character) and the line is blank, the HTTP request has ended,
-        // so you can send a reply
-        if (c == '\n') {
+        
+        else if(c == ','){              //change variable for other parameters
+          if(buff + '\0' == "ACK"){
+            Serial.println("received ACK from Node");
+            break;
+          }
+          else if(!NodeFound){
+            nodeIndex = atoi(buff + '\0');// sets which node we are communicating with.. can be done with IPaddress but making it simpler for now.
+            NodeFound = true;
+          }else{
+            parameter[nodeIndex][variableNum] = atoi(buff+'\0');
+            variableNum++;
+          }         
+        }else if (c == '\n') {
           // you're starting a new line
           Myclients.println("ACK");
           break;
+        }else{
+          buff[buffIndex] = c;
+          buffIndex++;
         }
       }
     }
@@ -98,7 +120,9 @@ void loop() {
     Serial.println("client disconnected");
     }
   }
-
+void Parser(WiFiClient client){
+  
+}
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
   Serial.print("SSID: ");
