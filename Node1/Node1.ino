@@ -30,7 +30,7 @@ WiFiClient client;
 void setup() {
   //Initialize serial and wait for port to open:
   Serial.begin(9600);
-//  while (!Serial||holdtime>millis()) {
+//  while (!Serial||holdtime<millis()) {
 //    ; // wait for serial port to connect or connect after 10s
 //  }
 
@@ -77,6 +77,8 @@ void loop() {
   WiFiClient Myclients = server.available();
   
   if (Myclients) {
+
+    //other nodes connect to current node to exchange data.
     Serial.println("new client");
    
     int variableNum = 0;
@@ -90,23 +92,25 @@ void loop() {
         char c = Myclients.read();      //read character
         Serial.write(c);
         
-        else if(c == ','){              //change variable for other parameters
+        else if(c == ','||c == '\n'){              //change variable for other parameters
           if(buff + '\0' == "ACK"){
             Serial.println("received ACK from Node");
             break;
           }
           else if(!NodeFound){
+            Serial.print("Node found:");
             nodeIndex = atoi(buff + '\0');// sets which node we are communicating with.. can be done with IPaddress but making it simpler for now.
+            Serial.println(nodeIndex);
             NodeFound = true;
-          }else{
+          }else{                                                //inserts values(pow,V,I etc..) into an int array
             parameter[nodeIndex][variableNum] = atoi(buff+'\0');
             variableNum++;
           }         
-        }else if (c == '\n') {
+        }else if (c == '\n') {                                  //breaks if we reach end of sentence
           // you're starting a new line
-          Myclients.println("ACK");
+          Myclients.println("ACK");                             //ACK
           break;
-        }else{
+        }else{                                                  //inserts new character into the buffer
           buff[buffIndex] = c;
           buffIndex++;
         }
@@ -114,15 +118,33 @@ void loop() {
     }
     // give the web browser time to receive the data
     delay(1);
-
+    //outputs
+    Serial.print("power from node");
+    Serial.print(NodeIndex);
+    Serail.print(": ");
+    Serial.println(parameter[NodeIndex]);
     // close the connection:
     Myclients.stop();
     Serial.println("client disconnected");
+    Serial.println("___________________");
+
+    delay(50);
+    
+    //current nodes connects with other nodes to exchange data.
+    if(client.connect(NodeIP[0],localPort)){
+      Serial.println("connected to Node2");
+      if(millis()>mytime + holdtime && client.connected()){
+        mytime = millis();
+        Serial.println("Sending Data to Node2...");
+        client.println("0,523");
+      }
+    }
+
+
+    
     }
   }
-void Parser(WiFiClient client){
-  
-}
+
 void printWifiStatus() {
   // print the SSID of the network you're attached to:
   Serial.print("SSID: ");
