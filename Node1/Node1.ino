@@ -9,10 +9,9 @@ char ssid[] = SECRET_SSID;        // your network SSID (name)
 char pass[] = SECRET_PASS;    // your network password (use for WPA, or use as key for WEP)
 int keyIndex = 0;            // your network key index number (needed only for WEP)
 
-IPAddress MyIP = IPAddress(192, 168, 0, 177);//<------------
-IPAddress NodeIP = IPAddress( 192, 168, 0, 178); //<------------
+IPAddress NodeIP = IPAddress(192, 168, 0, 177);//<------------
+IPAddress MyIP = IPAddress( 192, 168, 0, 178); //<------------
 
-char msg[] = "hello";
 unsigned int localPort = 80;      // local port to listen on
 
 char packetBuffer[256]; //buffer to hold incoming packet
@@ -74,7 +73,6 @@ void loop() {
   if (millis() > mytime + holdtime) {
     mytime = millis();
     Serial.println("Node 1 is running");
-    //sendMsg(ip2,localPort,msg);         //<------------
   }
 
 //SERVER MODE
@@ -141,8 +139,8 @@ void loop() {
       Serial.println("connected to Node2");
       if (millis() > mytime + holdtime && client.connected()) {
         mytime = millis();
-        Serial.println("Sending Data to Node1...");//<------------
-        client.println("0,524");                   //<------------
+        Serial.println("Sending Data to Node2...");//<------------
+        client.println("1,524");                   //<------------
       }
     }
     boolean currentLineIsBlank = true;
@@ -164,7 +162,7 @@ void loop() {
     //if the server's disconnected, stop the client:
     if (!client.connected()) {
       Serial.println();
-      Serial.println("disconnecting from node2."); //<------------
+      Serial.println("disconnecting from node1."); //<------------
       client.stop();
     }
   
