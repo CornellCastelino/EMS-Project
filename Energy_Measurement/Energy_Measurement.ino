@@ -4,7 +4,8 @@ void setup()
 {
   Serial.begin(9600);
   //emon1.voltage(2, 234.26, 1.7);  // Voltage: input pin, calibration, phase_shift
-  emon1.current(A2, 111.1);       // Current: input pin, calibration.
+  emon1.current(A2, 302.14);       // Current: input pin, calibration.
+  // new calibration = old * (correct reading/arduino reading)
 
 }
 //int getMax(){
@@ -15,7 +16,7 @@ void setup()
 //      Max = sensorVal;
 //    }
 //    delay(10);
-//  }
+//  }0
 //  return Max;
 //}
 void loop()
