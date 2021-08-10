@@ -1,38 +1,62 @@
 #include "EmonLib.h"             // Include Emon Library
-EnergyMonitor emon1;             // Create an instanc
+#include <SPI.h>
+#include <SD.h>
+
+File myFile;
+EnergyMonitor emon1;             // Create an instance
+int stablize = 30;
+bool initial;
 void setup()
 {
   Serial.begin(9600);
-  //emon1.voltage(2, 234.26, 1.7);  // Voltage: input pin, calibration, phase_shift
-  emon1.current(A2, 302.14);       // Current: input pin, calibration.
+  emon1.voltage(A3, 1080.6,1.15);  // Voltage: input pin, calibration, phase_shift
+  emon1.current(A2, 355.9);       // Current: input pin, calibration.
   // new calibration = old * (correct reading/arduino reading)
-
+  initial =  true;
 }
-//int getMax(){
-//  int Max = 0;
-//  for(int i = 0; i < 100; i++){
-//    int sensorVal = analogRead(A2);
-//    if(sensorVal > Max){
-//      Max = sensorVal;
-//    }
-//    delay(10);
-//  }0
-//  return Max;
-//}
+
 void loop()
 { 
-//  float v = getMax()* (3.3/1023.0);
-//  
-//  float Pow = v*v*4000.0/2.0;                 // ~v*(v*10 = I), 400(CT ratio)
-//  Serial.print("Value of V: ");
-//  Serial.println(v);
-//  Serial.print("Approx. Power Consumption: ");
-//  Serial.print(Pow);
-//  Serial.println("W");
-  delay(10);
-  double Irms = emon1.calcIrms(1480);         // Calculate all. No.of wavelengths, time-out
-  Serial.print("Irms : ");
-  Serial.println(Irms);
-  delay(100);
-//  emon1.serialprint();           // Print out all variables
+  if (initial){
+    Serial.println("Starting to stablize...");
+    for( int i = 0; i < stablize;i++){
+      emon1.calcVI(20,2000);
+      Serial.print((double)i/stablize*100);
+      Serial.println("% done..");
+      emon1.serialprint();
+    }
+    Serial.println("Output has stablized");
+  initial = false;
+  }
+  emon1.calcVI(20,2000);
+  //_____________________________________________
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(10)) {
+    Serial.println("initialization failed!");
+    while (1);
+  }
+  Serial.println("initialization done.");
+  myFile = SD.open("test.txt", FILE_WRITE);
+
+  if (myFile) {
+    Serial.print("Writing to test.txt...");
+    myFile.print(millis());
+    myFile.print(",");
+    myFile.print(emon1.realPower);
+    myFile.print(",");
+    myFile.print(emon1.apparentPower);
+    myFile.print(",");
+    myFile.print(emon1.Vrms);
+    myFile.print(",");
+    myFile.print(emon1.Irms);
+    myFile.print(",");
+    myFile.println(emon1.powerFactor);
+    
+    myFile.close();
+    Serial.println("done.");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening test.txt");
+  }
+  delay(1000);
 }
