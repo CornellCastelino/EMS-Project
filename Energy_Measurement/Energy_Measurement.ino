@@ -4,7 +4,9 @@
 
 File myFile;
 EnergyMonitor emon1;             // Create an instance
-int stablize = 30;
+double Rpower,Apower,V,I,Pf,samples;     //V and I are in RMS values.
+int stablize = 45;
+int Time;
 bool initial;
 void setup()
 {
@@ -13,6 +15,13 @@ void setup()
   emon1.current(A2, 355.9);       // Current: input pin, calibration.
   // new calibration = old * (correct reading/arduino reading)
   initial =  true;
+  Rpower = 0;
+  Apower = 0;
+  V = 0;
+  I = 0;
+  Pf = 0;
+  samples = 0;
+  Time = millis();
 }
 
 void loop()
@@ -28,8 +37,38 @@ void loop()
     Serial.println("Output has stablized");
   initial = false;
   }
+  //__________________________________________
+  //avg values
   emon1.calcVI(20,2000);
-  //_____________________________________________
+  Rpower += emon1.realPower;
+  Apower += emon1.apparentPower;
+  V += emon1.Vrms;
+  I += emon1.Irms;
+  Pf += emon1.powerFactor;
+  ++samples;
+  
+  Store(emon1,myFile);
+  
+  if(millis() - Time >15000){
+    emon1.realPower = Rpower/samples;
+    emon1.apparentPower = Apower/samples;
+    emon1.Vrms = V/samples;
+    emon1.Irms = I/samples;
+    emon1.powerFactor = Pf/samples;
+    
+    Store(emon1,myFile);
+    
+    Rpower = 0;
+    Apower = 0;
+    V = 0;
+    I = 0;
+    Pf = 0;
+    samples = 0;
+    Time = millis();
+  }
+}
+void Store(EnergyMonitor emon1,File myFile){//function to store in SD card
+  
   Serial.print("Initializing SD card...");
   if (!SD.begin(10)) {
     Serial.println("initialization failed!");
@@ -58,5 +97,4 @@ void loop()
     // if the file didn't open, print an error:
     Serial.println("error opening test.txt");
   }
-  delay(1000);
 }
