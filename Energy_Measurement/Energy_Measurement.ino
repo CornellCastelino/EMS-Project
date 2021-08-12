@@ -5,14 +5,14 @@
 File myFile;
 EnergyMonitor emon1;             // Create an instance
 double Rpower,Apower,V,I,Pf,samples;     //V and I are in RMS values.
-int stablize = 45;                      // takes # samples to stablize the arduino readings on start up
+int stablize = 30;                      // takes # samples to stablize the arduino readings on start up
 int Time;
 bool initial;
 void setup()
 {
   Serial.begin(9600);
-  emon1.voltage(A3, 1065.98,1.15);  // Voltage: input pin, calibration, phase_shift
-  emon1.current(A2, 367.2);       // Current: input pin, calibration.
+  emon1.voltage(A3, 692.52,1.15);  // Voltage: input pin, calibration, phase_shift
+  emon1.current(A2, 144.55);       // Current: input pin, calibration.
   // new calibration = old * (correct reading/arduino reading)
   initial =  true;
   Rpower = 0;
@@ -45,7 +45,9 @@ void loop()
   I += emon1.Irms;
   Pf += emon1.powerFactor;
   ++samples;
+  
   emon1.serialprint();
+  
   if(millis() - Time >15000){// log avg values every #s
     emon1.realPower = Rpower/samples;
     emon1.apparentPower = Apower/samples;
@@ -70,7 +72,7 @@ void Store(EnergyMonitor emon1,File myFile){//function to store in SD card
   
 //  Serial.print("Initializing SD card...");
   if (!SD.begin(10)) {
-//    Serial.println("initialization failed!");
+    Serial.println("initialization failed!");
     while (1);
   }
 //  Serial.println("initialization done.");
