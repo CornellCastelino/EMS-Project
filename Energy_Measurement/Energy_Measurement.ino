@@ -33,6 +33,7 @@ void setup()
 
 void loop()
 { 
+  emon1.serialprint();
  StoreEmon(emon1,Rpower,Apower,V,I,Pf,samples,Time);
   //__________________________________________
  
