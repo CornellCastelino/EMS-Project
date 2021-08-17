@@ -71,7 +71,7 @@ void StoreEmon(EnergyMonitor emon1,double &Rpower,double &Apower,double &V,doubl
     samples = 0;
     Time = millis();
     Serial.print("logged @:");
-    Serial.println((double)Time/1000);S
+    Serial.println((double)Time/1000);
   }
 }
 void stablize(EnergyMonitor emon1, int count){
