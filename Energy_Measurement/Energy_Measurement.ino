@@ -5,7 +5,7 @@
 File myFile;
 EnergyMonitor emon1;             // Create an instance
 double Rpower,Apower,V,I,Pf,samples;     //V and I are in RMS values.
-int stablize =45;                // takes # samples to stablize the arduino readings on start up
+int stablizeNum =45;                // takes # samples to stablize the arduino readings on start up
 double Vcal = 692.52;//692.52
 double Ical = 144.55;//144.55
 double Pfcal = 1.15;
@@ -25,24 +25,20 @@ void setup()
   I = 0;
   Pf = 0;
   samples = 0;
-  Time = millis();}
+  Time = millis();
+
+  stablize(emon1,stablizeNum);
+
+}
 
 void loop()
 { 
-  if (initial){
-    Serial.println("Starting to stablize...");
-    for( int i = 0; i < stablize;i++){
-      digitalWrite(2, LOW);   // turn the LED on (HIGH is the voltage level) 
-      emon1.calcVI(20,2000);
-      digitalWrite(2, HIGH);
-      Serial.print((double)i/stablize*100);
-      Serial.println("% done..");
-    }
-    Serial.println("Output has stablized");
-  initial = false;
-  }
+ StoreEmon(emon1,Rpower,Apower,V,I,Pf,samples,Time);
   //__________________________________________
-  //avg values
+ 
+}
+void StoreEmon(EnergyMonitor emon1,double &Rpower,double &Apower,double &V,double &I,double &Pf,double &samples,int &Time){
+   //avg values
   digitalWrite(2, LOW);   // turn the LED on (HIGH is the voltage level) 
   emon1.calcVI(20,2000);
   digitalWrite(2, HIGH);    // turn the LED off by making the voltage LOW
@@ -58,25 +54,36 @@ void loop()
   
   emon1.serialprint();
   Store(emon1,myFile);
-//  if(millis() - Time >15000){// log avg values every #s
-//    emon1.realPower = Rpower/samples;
-//    emon1.apparentPower = Apower/samples;
-//    emon1.Vrms = V/samples;
-//    emon1.Irms = I/samples;
-//    emon1.powerFactor = Pf/samples;
-//    
-//    Store(emon1,myFile);
-//    
-//    Rpower = 0;
-//    Apower = 0;
-//    V = 0;
-//    I = 0;
-//    Pf = 0;
-//    samples = 0;
-//    Time = millis();
-//    Serial.print("logged @:");
-//    Serial.println((double)Time/1000);
-//  }
+  if(millis() - Time >15000){// log avg values every #s
+    emon1.realPower = Rpower/samples;
+    emon1.apparentPower = Apower/samples;
+    emon1.Vrms = V/samples;
+    emon1.Irms = I/samples;
+    emon1.powerFactor = Pf/samples;
+    
+    Store(emon1,myFile);
+    
+    Rpower = 0;
+    Apower = 0;
+    V = 0;
+    I = 0;
+    Pf = 0;
+    samples = 0;
+    Time = millis();
+    Serial.print("logged @:");
+    Serial.println((double)Time/1000);S
+  }
+}
+void stablize(EnergyMonitor emon1, int count){
+  Serial.println("Starting to stablize...");
+    for( int i = 0; i < count;i++){
+      digitalWrite(2, LOW);   // turn the LED on (HIGH is the voltage level) 
+      emon1.calcVI(20,2000);
+      digitalWrite(2, HIGH);
+      Serial.print((double)i/count*100);
+      Serial.println("% done..");
+    }
+    Serial.println("Output has stablized");
 }
 void Store(EnergyMonitor emon1,File myFile){//function to store in SD card
   
