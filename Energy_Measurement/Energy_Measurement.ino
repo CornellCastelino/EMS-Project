@@ -5,27 +5,15 @@
 File myFile;
 EnergyMonitor emon1;             // Create an instance
 double Rpower,Apower,V,I,Pf,samples;     //V and I are in RMS values.
-<<<<<<< HEAD
-int stablizeNum =45;                // takes # samples to stablize the arduino readings on start up
-double Vcal = 692.52;//692.52
-double Ical = 144.55;//144.55
-double Pfcal = 1.15;
-=======
-int stablize = 45;                      // takes # samples to stablize the arduino readings on start up
->>>>>>> parent of 222cc25 (Update Energy_Measurement.ino)
+int stablize = 30;                      // takes # samples to stablize the arduino readings on start up
 int Time;
 bool initial;
 void setup()
 {
+  pinMode(2,OUTPUT);
   Serial.begin(9600);
-<<<<<<< HEAD
-  pinMode(2, OUTPUT);
-  emon1.voltage(A6, Vcal,Pfcal);  // Voltage: input pin, calibration, phase_shift
-  emon1.current(A1, Ical);       // Current: input pin, calibration.
-=======
-  emon1.voltage(A3, 1065.98,1.15);  // Voltage: input pin, calibration, phase_shift
-  emon1.current(A2, 367.2);       // Current: input pin, calibration.
->>>>>>> parent of 222cc25 (Update Energy_Measurement.ino)
+  emon1.voltage(A3, 692.52,1.15);  // Voltage: input pin, calibration, phase_shift
+  emon1.current(A2, 144.55);       // Current: input pin, calibration.
   // new calibration = old * (correct reading/arduino reading)
   initial =  true;
   Rpower = 0;
@@ -35,38 +23,36 @@ void setup()
   Pf = 0;
   samples = 0;
   Time = millis();
-
-  stablize(emon1,stablizeNum);
-
 }
-
-void loop()
-{ 
-  emon1.serialprint();
- StoreEmon(emon1,Rpower,Apower,V,I,Pf,samples,Time);
+void loop(){ 
+  if (initial){
+    Serial.println("Starting to stablize...");
+    for( int i = 0; i < stablize;i++){
+      digitalWrite(2,LOW);
+      emon1.calcVI(20,2000);
+      digitalWrite(2,HIGH);
+      Serial.print((double)i/stablize*100);
+      Serial.println("% done..");
+    }
+    Serial.println("Output has stablized");
+  initial = false;
+  }
   //__________________________________________
- 
-}
-void StoreEmon(EnergyMonitor emon1,double &Rpower,double &Apower,double &V,double &I,double &Pf,double &samples,int &Time){
-   //avg values
-  digitalWrite(2, LOW);   // turn the LED on (HIGH is the voltage level) 
-  emon1.calcVI(20,2000);
-  digitalWrite(2, HIGH);    // turn the LED off by making the voltage LOW
-
-
+  //avg values
   
+  digitalWrite(2,LOW);
+  emon1.calcVI(20,2000);
+  digitalWrite(2,HIGH);
   Rpower += emon1.realPower;
   Apower += emon1.apparentPower;
   V += emon1.Vrms;
   I += emon1.Irms;
   Pf += emon1.powerFactor;
   ++samples;
-  emon1.serialprint();
-<<<<<<< HEAD
-  Store(emon1,myFile);
-=======
->>>>>>> parent of 222cc25 (Update Energy_Measurement.ino)
-  if(millis() - Time >15000){// log avg values every #s
+
+//  emon1.serialprint();
+
+  if(millis() - Time >30000){// log avg values every #s
     emon1.realPower = Rpower/samples;
     emon1.apparentPower = Apower/samples;
     emon1.Vrms = V/samples;
@@ -83,35 +69,20 @@ void StoreEmon(EnergyMonitor emon1,double &Rpower,double &Apower,double &V,doubl
     samples = 0;
     Time = millis();
     Serial.print("logged @:");
-    Serial.println((double)Time/1000);
+    Serial.println(Time);
   }
 }
-void stablize(EnergyMonitor emon1, int count){
-  Serial.println("Starting to stablize...");
-    for( int i = 0; i < count;i++){
-      digitalWrite(2, LOW);   // turn the LED on (HIGH is the voltage level) 
-      emon1.calcVI(20,2000);
-      digitalWrite(2, HIGH);
-      Serial.print((double)i/count*100);
-      Serial.println("% done..");
-    }
-    Serial.println("Output has stablized");
-}
 void Store(EnergyMonitor emon1,File myFile){//function to store in SD card
-  
+
 //  Serial.print("Initializing SD card...");
   if (!SD.begin(10)) {
-<<<<<<< HEAD
-    Serial.println("initialization failed!");
-    digitalWrite(2, HIGH);   // turn the LED on (HIGH is the voltage level) 
-=======
 //    Serial.println("initialization failed!");
->>>>>>> parent of 222cc25 (Update Energy_Measurement.ino)
+    Serial.println("initialization failed!");
+    digitalWrite(2,HIGH);
     while (1);
   }
 //  Serial.println("initialization done.");
   myFile = SD.open("test.txt", FILE_WRITE);
-
   if (myFile) {
 //    Serial.print("Writing to test.txt...");
     myFile.print(millis()/1000);
